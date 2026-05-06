@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tagman — UX Tasarım Yönleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #FFD100;
+    --primary-fg: #1A1A1A;
+    --bg: #F5F5F5;
+    --surface: #FFFFFF;
+    --sidebar-bg: #1A1A1A;
+    --sidebar-text: #FFFFFF;
+    --sidebar-muted: #A3A3A3;
+    --border: #E5E5E5;
+    --muted: #737373;
+    --text: #1A1A1A;
+    --text-secondary: #525252;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --destructive: #EF4444;
+    --radius: 8px;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #E8E8E8;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* NAV */
+  .page-nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--sidebar-bg);
+    padding: 12px 32px;
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .page-nav h1 { color: var(--primary); font-size: 16px; font-weight: 700; margin-right: 16px; }
+  .nav-btn {
+    background: transparent; border: 1px solid #444; color: var(--sidebar-muted);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover, .nav-btn.active { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); font-weight: 600; }
+
+  /* DIRECTION SECTIONS */
+  .direction { display: none; padding: 32px; }
+  .direction.visible { display: block; }
+  .direction-header { text-align: center; margin-bottom: 32px; }
+  .direction-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .direction-header p { color: var(--muted); font-size: 14px; }
+
+  .screen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(680px, 1fr)); gap: 32px; }
+  .screen-wrap { background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.10); }
+  .screen-label { background: var(--sidebar-bg); color: var(--sidebar-muted); font-size: 11px; padding: 6px 16px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* APP SHELL */
+  .app { display: flex; height: 560px; background: var(--bg); }
+
+  .sidebar {
+    width: 220px; min-width: 220px; background: var(--sidebar-bg); display: flex; flex-direction: column;
+    padding: 0; flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px; border-bottom: 1px solid #2A2A2A;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark { width: 28px; height: 28px; background: var(--primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--primary-fg); }
+  .sidebar-logo span { color: var(--sidebar-text); font-weight: 600; font-size: 15px; }
+
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .sidebar-section { padding: 8px 16px 4px; font-size: 10px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.08em; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer;
+    color: var(--sidebar-muted); font-size: 13px; position: relative; transition: all 0.1s;
+  }
+  .nav-item:hover { color: var(--sidebar-text); background: #252525; }
+  .nav-item.active { color: var(--sidebar-text); background: #252525; }
+  .nav-item.active::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: var(--primary); border-radius: 0 2px 2px 0; }
+  .nav-icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  .sidebar-footer { padding: 12px 16px; border-top: 1px solid #2A2A2A; }
+  .user-pill { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; cursor: pointer; }
+  .user-pill:hover { background: #252525; }
+  .avatar { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--primary-fg); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { color: var(--sidebar-text); font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { color: var(--sidebar-muted); font-size: 11px; }
+
+  .content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
+
+  /* TOPBAR */
+  .topbar {
+    height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0;
+  }
+  .topbar h2 { font-size: 16px; font-weight: 600; flex: 1; }
+  .topbar-actions { display: flex; gap: 8px; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); }
+  .btn-primary:hover { background: #ECC000; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-ghost { background: transparent; color: var(--muted); border: none; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--destructive); }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .badge-success { background: #DCFCE7; color: #166534; }
+  .badge-warning { background: #FEF9C3; color: #854D0E; }
+  .badge-destructive { background: #FEE2E2; color: #991B1B; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-gray { background: #F3F4F6; color: #374151; }
+  .badge-yellow { background: var(--primary); color: var(--primary-fg); }
+
+  /* CHIPS */
+  .chip-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 0 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); }
+  .chip.active { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); }
+  .chip-x { font-size: 14px; line-height: 1; opacity: 0.6; }
+
+  /* CARDS */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); }
+  .card-sm { padding: 12px 16px; }
+  .card-md { padding: 16px 20px; }
+  .card-lg { padding: 20px 24px; }
+
+  /* PAGE CONTENT */
+  .page-content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+
+  /* TRAINER CARD */
+  .trainer-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .trainer-card:hover { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .trainer-avatar { width: 40px; height: 40px; border-radius: 50%; background: #F3F4F6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--muted); flex-shrink: 0; }
+  .trainer-info { flex: 1; min-width: 0; }
+  .trainer-name { font-weight: 600; font-size: 14px; }
+  .trainer-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .trainer-score { text-align: right; flex-shrink: 0; }
+  .score-val { font-size: 18px; font-weight: 700; color: var(--text); }
+  .score-label { font-size: 10px; color: var(--muted); }
+  .trainer-skills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .skill-tag { font-size: 11px; padding: 2px 7px; background: var(--bg); border-radius: 4px; color: var(--text-secondary); }
+  .availability { display: flex; align-items: center; gap: 4px; font-size: 11px; margin-top: 4px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--success); }
+  .dot-yellow { background: var(--warning); }
+
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .stat-sub { font-size: 12px; color: var(--success); margin-top: 2px; }
+
+  /* CALENDAR */
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-header { text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px; }
+  .cal-day { border: 1px solid var(--border); border-radius: 4px; padding: 6px; min-height: 60px; background: var(--surface); font-size: 11px; }
+  .cal-day.today { border-color: var(--primary); background: #FFFDE7; }
+  .cal-day-num { font-weight: 600; font-size: 12px; margin-bottom: 4px; }
+  .cal-event { background: #DBEAFE; color: #1E40AF; border-radius: 3px; padding: 2px 4px; font-size: 10px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-event.cancelled { background: #FEE2E2; color: #991B1B; }
+  .cal-event.completed { background: #DCFCE7; color: #166534; }
+
+  /* WIZARD */
+  .wizard-steps { display: flex; align-items: center; gap: 0; margin-bottom: 24px; }
+  .wizard-step { display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; border: 2px solid var(--border); color: var(--muted); background: var(--surface); }
+  .step-num.active { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); }
+  .step-num.done { background: var(--success); border-color: var(--success); color: #fff; }
+  .step-label { color: var(--muted); white-space: nowrap; }
+  .step-label.active { color: var(--text); font-weight: 600; }
+  .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
+  .step-line.done { background: var(--success); }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block; }
+  .form-control {
+    width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text);
+    outline: none; transition: border 0.15s;
+  }
+  .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255,209,0,0.2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* SEARCH INPUT */
+  .search-bar { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; }
+  .search-bar input { flex: 1; border: none; outline: none; font-family: inherit; font-size: 13px; background: transparent; }
+  .search-icon { color: var(--muted); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* SUGGESTED TRAINER */
+  .suggested-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .suggested-card:hover, .suggested-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255,209,0,0.25); }
+  .suggested-rank { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--primary-fg); flex-shrink: 0; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+
+  /* WARNING BANNER */
+  .warning-banner { background: #FEF9C3; border: 1px solid #F59E0B; border-radius: var(--radius); padding: 10px 14px; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+  .warning-icon { flex-shrink: 0; color: var(--warning); font-size: 16px; }
+
+  /* PROFILE */
+  .profile-header { background: var(--sidebar-bg); padding: 24px; display: flex; align-items: center; gap: 20px; }
+  .profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: var(--primary-fg); }
+  .profile-name { color: #fff; font-size: 18px; font-weight: 700; }
+  .profile-meta { color: var(--sidebar-muted); font-size: 13px; margin-top: 4px; }
+  .profile-score { margin-left: auto; text-align: center; }
+  .profile-score-val { color: var(--primary); font-size: 32px; font-weight: 700; line-height: 1; }
+  .profile-score-label { color: var(--sidebar-muted); font-size: 11px; }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; padding: 0 4px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; background: var(--primary); border-radius: 3px 3px 0 0; min-height: 4px; opacity: 0.85; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 2px solid var(--border); gap: 0; }
+  .tab { padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: var(--text); border-bottom-color: var(--primary); }
+
+  /* VIEW TOGGLE */
+  .view-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .view-btn { padding: 6px 10px; font-size: 12px; cursor: pointer; background: var(--surface); border: none; color: var(--muted); font-family: inherit; }
+  .view-btn.active { background: var(--primary); color: var(--primary-fg); font-weight: 600; }
+
+  /* COMPARE LABEL */
+  .compare { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .compare-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* SCROLL */
+  .overflow-scroll { overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="page-nav">
+  <h1>tagman UX Yönleri</h1>
+  <button class="nav-btn active" onclick="show(1,this)">1 — Dashboard</button>
+  <button class="nav-btn" onclick="show(2,this)">2 — Eğitmen Arama</button>
+  <button class="nav-btn" onclick="show(3,this)">3 — Eğitim Wizard</button>
+  <button class="nav-btn" onclick="show(4,this)">4 — Eğitmen Profil</button>
+  <button class="nav-btn" onclick="show(5,this)">5 — Tamamlama Akışı</button>
+  <button class="nav-btn" onclick="show(6,this)">6 — Skill Kataloğu</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 1: DASHBOARD -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction visible" id="dir-1">
+  <div class="direction-header">
+    <h2>Yön 1 — Ana Dashboard</h2>
+    <p>Takvim görünümü + bu haftaki eğitim özeti + hızlı aksiyonlar</p>
+  </div>
+  <div class="screen-grid">
+
+    <!-- SCREEN A: Takvim Görünümü -->
+    <div class="screen-wrap">
+      <div class="screen-label">Dashboard — Takvim Görünümü</div>
+      <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-logo">
+            <div class="logo-mark">T</div>
+            <span>Akademi</span>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-section">Ana</div>
+            <div class="nav-item active">
+              <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+              Dashboard
+            </div>
+            <div class="sidebar-section">Yönetim</div>
+            <div class="nav-item">
+              <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+              Eğitmenler
+            </div>
+            <div class="nav-item">
+              <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
+              Skill Kataloğu
+            </div>
+            <div class="nav-item">
+              <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>
+              Eğitimler
+            </div>
+          </nav>
+          <div class="sidebar-footer">
+            <div class="user-pill">
+              <div class="avatar">AY</div>
+              <div class="user-info">
+                <div class="user-name">Ayşe Yılmaz</div>
+                <div class="user-role">Koordinatör</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Content -->
+        <div class="content">
+          <div class="topbar">
+            <h2>Dashboard</h2>
+            <div class="topbar-actions">
+              <div class="view-toggle">
+                <button class="view-btn active">Takvim</button>
+                <button class="view-btn">Liste</button>
+                <button class="view-btn">Kart</button>
+              </div>
+              <button class="btn btn-primary">+ Yeni Eğitim</button>
+            </div>
+          </div>
+          <div class="page-content">
+            <!-- Stat row -->
+            <div class="stat-grid" style="margin-bottom:16px">
+              <div class="stat-card">
+                <div class="stat-label">Bu Hafta</div>
+                <div class="stat-value">4</div>
+                <div class="stat-sub">↑ 1 eğitim fazla</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Tamamlanan</div>
+                <div class="stat-value" style="color:var(--success)">12</div>
+                <div class="stat-sub" style="color:var(--muted)">Bu ay</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Aktif Eğitmen</div>
+                <div class="stat-value">38</div>
+                <div class="stat-sub" style="color:var(--muted)">107 kayıtlı</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Bekleyen</div>
+                <div class="stat-value" style="color:var(--warning)">2</div>
+                <div class="stat-sub" style="color:var(--muted)">Puan girilmemiş</div>
+              </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="card card-md">
+              <div class="cal-header">
+                <button class="btn btn-ghost btn-sm">‹</button>
+                <span style="font-weight:600">Mayıs 2026</span>
+                <button class="btn btn-ghost btn-sm">›</button>
+              </div>
+              <div class="cal-grid">
+                <div class="cal-day-header">Pzt</div><div class="cal-day-header">Sal</div><div class="cal-day-header">Çar</div><div class="cal-day-header">Per</div><div class="cal-day-header">Cum</div><div class="cal-day-header">Cmt</div><div class="cal-day-header">Paz</div>
+                <div class="cal-day"><div class="cal-day-num">4</div></div>
+                <div class="cal-day"><div class="cal-day-num">5</div><div class="cal-event">Liderlik Eğt.</div></div>
+                <div class="cal-day today"><div class="cal-day-num" style="color:var(--primary-fg);background:var(--primary);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center">6</div><div class="cal-event">Excel İleri</div></div>
+                <div class="cal-day"><div class="cal-day-num">7</div><div class="cal-event">Python Temelleri</div></div>
+                <div class="cal-day"><div class="cal-day-num">8</div><div class="cal-event cancelled">Sunum (İptal)</div></div>
+                <div class="cal-day"><div class="cal-day-num">9</div></div>
+                <div class="cal-day"><div class="cal-day-num">10</div></div>
+                <div class="cal-day"><div class="cal-day-num">11</div></div>
+                <div class="cal-day"><div class="cal-day-num">12</div></div>
+                <div class="cal-day"><div class="cal-day-num">13</div><div class="cal-event completed">Proje Yön. ✓</div></div>
+                <div class="cal-day"><div class="cal-day-num">14</div></div>
+                <div class="cal-day"><div class="cal-day-num">15</div><div class="cal-event">Veri Analizi</div></div>
+                <div class="cal-day"><div class="cal-day-num">16</div></div>
+                <div class="cal-day"><div class="cal-day-num">17</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN B: Liste Görünümü -->
+    <div class="screen-wrap">
+      <div class="screen-label">Dashboard — Liste Görünümü</div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-section">Ana</div>
+            <div class="nav-item active">
+              <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+              Dashboard
+            </div>
+            <div class="sidebar-section">Yönetim</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Skill Kataloğu</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar">
+            <h2>Dashboard</h2>
+            <div class="topbar-actions">
+              <div class="view-toggle"><button class="view-btn">Takvim</button><button class="view-btn active">Liste</button><button class="view-btn">Kart</button></div>
+              <button class="btn btn-primary">+ Yeni Eğitim</button>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="tabs" style="margin-bottom:16px">
+              <div class="tab active">Bu Hafta</div>
+              <div class="tab">Yaklaşan</div>
+              <div class="tab">Tümü</div>
+            </div>
+            <div class="card">
+              <table>
+                <thead><tr><th>Eğitim</th><th>Tarih</th><th>Eğitmen</th><th>Durum</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600">Excel İleri Seviye</div><div style="font-size:12px;color:var(--muted)">Veri Analizi</div></td><td>6 May</td><td>Mehmet K.</td><td><span class="badge badge-blue">Planlandı</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td><div style="font-weight:600">Python Temelleri</div><div style="font-size:12px;color:var(--muted)">Programlama</div></td><td>7 May</td><td>Selin A.</td><td><span class="badge badge-blue">Planlandı</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td><div style="font-weight:600">Sunum Teknikleri</div><div style="font-size:12px;color:var(--muted)">Soft Skills</div></td><td>8 May</td><td>Ahmet D.</td><td><span class="badge badge-destructive">İptal</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td><div style="font-weight:600">Proje Yönetimi</div><div style="font-size:12px;color:var(--muted)">Yönetim</div></td><td>13 May</td><td>Zeynep T.</td><td><span class="badge badge-success">Tamamlandı</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td><div style="font-weight:600">Veri Analizi</div><div style="font-size:12px;color:var(--muted)">Analitik</div></td><td>15 May</td><td>—</td><td><span class="badge badge-warning">Eğitmen Yok</span></td><td><button class="btn btn-primary btn-sm">Ata</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 2: EĞİTMEN ARAMA -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction" id="dir-2">
+  <div class="direction-header">
+    <h2>Yön 2 — Eğitmen Arama</h2>
+    <p>Chip filtreli arama + kart listesi + ikincil skill görünümü</p>
+  </div>
+  <div class="screen-grid">
+
+    <!-- SCREEN A: Arama Sonuçları -->
+    <div class="screen-wrap">
+      <div class="screen-label">Eğitmen Arama — Temel Görünüm</div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-section">Ana</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="sidebar-section">Yönetim</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Skill Kataloğu</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar">
+            <h2>Eğitmenler</h2>
+            <div class="topbar-actions">
+              <button class="btn btn-outline btn-sm">CSV İndir</button>
+              <button class="btn btn-primary">+ Eğitmen Ekle</button>
+            </div>
+          </div>
+          <div class="page-content">
+            <!-- Search + Filters -->
+            <div class="search-bar" style="margin-bottom:8px">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="m11 11 3 3"/></svg>
+              <input type="text" placeholder="Ad, soyad ile ara..." value="python">
+            </div>
+            <div class="chip-bar">
+              <div class="chip">Filtre Ekle +</div>
+              <div class="chip active">Skill: Python <span class="chip-x">×</span></div>
+              <div class="chip active">Min. Puan: 7 <span class="chip-x">×</span></div>
+              <div class="chip active">Kurum Dışı <span class="chip-x">×</span></div>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:12px">14 eğitmen bulundu</div>
+            <!-- Results -->
+            <div style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:320px">
+              <div class="trainer-card">
+                <div class="trainer-avatar" style="background:#DBEAFE;color:#1D4ED8">SK</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Selin Kaya</div>
+                  <div class="trainer-meta">Kurum Dışı · TechConsult A.Ş.</div>
+                  <div class="trainer-skills"><span class="skill-tag">Python</span><span class="skill-tag">ML</span><span class="skill-tag">Veri</span></div>
+                  <div class="availability"><div class="dot dot-green"></div><span style="color:var(--success)">Bugün müsait</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">9.2</div><div class="score-label">/ 10</div></div>
+              </div>
+              <div class="trainer-card">
+                <div class="trainer-avatar" style="background:#F3E8FF;color:#7C3AED">MA</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Murat Arslan</div>
+                  <div class="trainer-meta">Kurum Dışı · DataPro</div>
+                  <div class="trainer-skills"><span class="skill-tag">Python</span><span class="skill-tag">SQL</span></div>
+                  <div class="availability"><div class="dot dot-green"></div><span style="color:var(--success)">Bugün müsait</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">8.7</div><div class="score-label">/ 10</div></div>
+              </div>
+              <div class="trainer-card">
+                <div class="trainer-avatar" style="background:#FEF9C3;color:#854D0E">EO</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Elif Özdemir</div>
+                  <div class="trainer-meta">Kurum Dışı · FreelanceDev</div>
+                  <div class="trainer-skills"><span class="skill-tag">Python</span><span class="skill-tag">Django</span></div>
+                  <div class="availability"><div class="dot dot-yellow"></div><span style="color:var(--warning)">14 Mayıs'ta çakışma var</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">8.1</div><div class="score-label">/ 10</div></div>
+              </div>
+              <div class="trainer-card">
+                <div class="trainer-avatar">CA</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Can Aslan</div>
+                  <div class="trainer-meta">Kurum İçi</div>
+                  <div class="trainer-skills"><span class="skill-tag">Python</span><span class="skill-tag">Pandas</span></div>
+                  <div class="availability"><div class="dot dot-green"></div><span style="color:var(--success)">Bugün müsait</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">7.8</div><div class="score-label">/ 10</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN B: Skill Toggle Açık -->
+    <div class="screen-wrap">
+      <div class="screen-label">Eğitmen Arama — Skill Detayı Açık</div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Skill Kataloğu</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar"><h2>Eğitmenler</h2><div class="topbar-actions"><button class="btn btn-outline btn-sm">CSV İndir</button><button class="btn btn-primary">+ Eğitmen Ekle</button></div></div>
+          <div class="page-content">
+            <div class="search-bar" style="margin-bottom:8px"><svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="m11 11 3 3"/></svg><input type="text" placeholder="Ad, soyad ile ara..." value="python"></div>
+            <div class="chip-bar"><div class="chip">Filtre Ekle +</div><div class="chip active">Skill: Python <span class="chip-x">×</span></div><div class="chip active">Min. Puan: 7 <span class="chip-x">×</span></div></div>
+            <!-- Expanded card -->
+            <div class="trainer-card" style="border-color:var(--primary);box-shadow:0 0 0 2px rgba(255,209,0,0.25);flex-direction:column;align-items:stretch">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div class="trainer-avatar" style="background:#DBEAFE;color:#1D4ED8">SK</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Selin Kaya</div>
+                  <div class="trainer-meta">Kurum Dışı · TechConsult A.Ş.</div>
+                  <div class="availability"><div class="dot dot-green"></div><span style="color:var(--success)">Bugün müsait</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">9.2</div><div class="score-label">/ 10</div></div>
+                <button class="btn btn-outline btn-sm">▲ Gizle</button>
+              </div>
+              <div class="divider"></div>
+              <div class="section-title">Skill Puanları</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <div style="background:var(--bg);border-radius:6px;padding:8px">
+                  <div style="font-size:12px;font-weight:600">Python</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                    <div style="flex:1;height:4px;background:var(--border);border-radius:2px"><div style="width:92%;height:100%;background:var(--primary);border-radius:2px"></div></div>
+                    <span style="font-size:12px;font-weight:700">9.2</span>
+                  </div>
+                </div>
+                <div style="background:var(--bg);border-radius:6px;padding:8px">
+                  <div style="font-size:12px;font-weight:600">ML</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                    <div style="flex:1;height:4px;background:var(--border);border-radius:2px"><div style="width:85%;height:100%;background:var(--primary);border-radius:2px"></div></div>
+                    <span style="font-size:12px;font-weight:700">8.5</span>
+                  </div>
+                </div>
+                <div style="background:var(--bg);border-radius:6px;padding:8px">
+                  <div style="font-size:12px;font-weight:600">Veri Görsel.</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                    <div style="flex:1;height:4px;background:var(--border);border-radius:2px"><div style="width:78%;height:100%;background:var(--primary);border-radius:2px"></div></div>
+                    <span style="font-size:12px;font-weight:700">7.8</span>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm">Eğitime Ata</button>
+                <button class="btn btn-outline btn-sm">Profili Gör</button>
+              </div>
+            </div>
+            <!-- Other cards collapsed -->
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+              <div class="trainer-card"><div class="trainer-avatar" style="background:#F3E8FF;color:#7C3AED">MA</div><div class="trainer-info"><div class="trainer-name">Murat Arslan</div><div class="trainer-meta">Kurum Dışı · DataPro</div></div><div class="trainer-score"><div class="score-val">8.7</div></div><button class="btn btn-ghost btn-sm">▼ Detay</button></div>
+              <div class="trainer-card"><div class="trainer-avatar" style="background:#FEF9C3;color:#854D0E">EO</div><div class="trainer-info"><div class="trainer-name">Elif Özdemir</div><div class="trainer-meta">Kurum Dışı · FreelanceDev</div></div><div class="trainer-score"><div class="score-val">8.1</div></div><button class="btn btn-ghost btn-sm">▼ Detay</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 3: EĞİTİM WIZARD -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction" id="dir-3">
+  <div class="direction-header">
+    <h2>Yön 3 — Eğitim Wizard</h2>
+    <p>Çok adımlı eğitim oluşturma + önerilen eğitmenler + çakışma uyarısı</p>
+  </div>
+  <div class="screen-grid">
+
+    <!-- SCREEN A: Wizard Adım 2 - Tarih/Süre -->
+    <div class="screen-wrap">
+      <div class="screen-label">Wizard — Adım 2: Tarih & Süre</div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar"><h2>Yeni Eğitim</h2><button class="btn btn-ghost btn-sm">✕ İptal</button></div>
+          <div class="page-content">
+            <!-- Steps -->
+            <div class="wizard-steps" style="margin-bottom:28px">
+              <div class="wizard-step"><div class="step-num done">✓</div><div class="step-label">Eğitim Bilgisi</div></div>
+              <div class="step-line done"></div>
+              <div class="wizard-step"><div class="step-num active">2</div><div class="step-label active">Tarih & Süre</div></div>
+              <div class="step-line"></div>
+              <div class="wizard-step"><div class="step-num">3</div><div class="step-label">Eğitmen Seç</div></div>
+              <div class="step-line"></div>
+              <div class="wizard-step"><div class="step-num">4</div><div class="step-label">Özet</div></div>
+            </div>
+
+            <div class="card card-md">
+              <div style="font-size:15px;font-weight:600;margin-bottom:16px">Tarih ve Süre</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Eğitim Tarihi</label>
+                  <input class="form-control" type="text" value="15 Mayıs 2026">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Süre</label>
+                  <select class="form-control"><option>1 gün (8 saat)</option><option>Yarım gün</option><option>2 saat</option></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Konum</label>
+                <input class="form-control" type="text" placeholder="Toplantı odası, şehir...">
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:20px">
+              <button class="btn btn-outline">‹ Geri</button>
+              <button class="btn btn-primary">İleri: Eğitmen Seç ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN B: Wizard Adım 3 - Önerilen Eğitmenler -->
+    <div class="screen-wrap">
+      <div class="screen-label">Wizard — Adım 3: Önerilen Eğitmenler</div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar"><h2>Yeni Eğitim</h2><button class="btn btn-ghost btn-sm">✕ İptal</button></div>
+          <div class="page-content">
+            <div class="wizard-steps" style="margin-bottom:20px">
+              <div class="wizard-step"><div class="step-num done">✓</div><div class="step-label">Eğitim Bilgisi</div></div>
+              <div class="step-line done"></div>
+              <div class="wizard-step"><div class="step-num done">✓</div><div class="step-label">Tarih & Süre</div></div>
+              <div class="step-line done"></div>
+              <div class="wizard-step"><div class="step-num active">3</div><div class="step-label active">Eğitmen Seç</div></div>
+              <div class="step-line"></div>
+              <div class="wizard-step"><div class="step-num">4</div><div class="step-label">Özet</div></div>
+            </div>
+
+            <div class="card card-md" style="margin-bottom:12px;background:#FFFDE7;border-color:#FFD100">
+              <div style="font-size:13px;font-weight:600;color:#5C4A00;margin-bottom:2px">⭐ Önerilen Eğitmenler</div>
+              <div style="font-size:12px;color:#7A6200">Python · 15 Mayıs · En yüksek puanlı ve müsait</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+              <div class="suggested-card selected">
+                <div class="suggested-rank">1</div>
+                <div class="trainer-avatar" style="width:36px;height:36px;background:#DBEAFE;color:#1D4ED8;font-size:12px">SK</div>
+                <div class="trainer-info">
+                  <div class="trainer-name">Selin Kaya</div>
+                  <div class="trainer-meta">Kurum Dışı · TechConsult</div>
+                  <div class="availability" style="margin-top:2px"><div class="dot dot-green"></div><span style="color:var(--success);font-size:11px">15 Mayıs'ta müsait</span></div>
+                </div>
+                <div class="trainer-score"><div class="score-val">9.2</div><div class="score-label">/10</div></div>
+                <span class="badge badge-yellow">Seçildi</span>
+              </div>
+              <div class="suggested-card">
+                <div class="suggested-rank" style="background:#F3F4F6;color:var(--muted)">2</div>
+                <div class="trainer-avatar" style="width:36px;height:36px;background:#F3E8FF;color:#7C3AED;font-size:12px">MA</div>
+                <div class="trainer-info"><div class="trainer-name">Murat Arslan</div><div class="trainer-meta">Kurum Dışı · DataPro</div><div class="availability" style="margin-top:2px"><div class="dot dot-green"></div><span style="color:var(--success);font-size:11px">15 Mayıs'ta müsait</span></div></div>
+                <div class="trainer-score"><div class="score-val">8.7</div><div class="score-label">/10</div></div>
+              </div>
+              <div class="suggested-card">
+                <div class="suggested-rank" style="background:#F3F4F6;color:var(--muted)">3</div>
+                <div class="trainer-avatar" style="width:36px;height:36px;background:#FEF9C3;color:#854D0E;font-size:12px">EO</div>
+                <div class="trainer-info"><div class="trainer-name">Elif Özdemir</div><div class="trainer-meta">Kurum Dışı · FreelanceDev</div><div class="availability" style="margin-top:2px"><div class="dot dot-yellow"></div><span style="color:var(--warning);font-size:11px">Çakışma riski</span></div></div>
+                <div class="trainer-score"><div class="score-val">8.1</div><div class="score-label">/10</div></div>
+              </div>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Veya başka biri ara:</div>
+            <div class="search-bar" style="margin-bottom:16px"><svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="m11 11 3 3"/></svg><input type="text" placeholder="Eğitmen adı..."></div>
+
+            <div style="display:flex;justify-content:space-between">
+              <button class="btn btn-outline">‹ Geri</button>
+              <button class="btn btn-primary">Özete Geç ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 4: EĞİTMEN PROFİL -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction" id="dir-4">
+  <div class="direction-header">
+    <h2>Yön 4 — Eğitmen Profil Sayfası</h2>
+    <p>Özet bilgi + yıllık eğitim bar grafiği + skill listesi + eğitim geçmişi</p>
+  </div>
+  <div class="screen-grid">
+    <div class="screen-wrap" style="grid-column:1/-1">
+      <div class="screen-label">Eğitmen Profili — Selin Kaya</div>
+      <div class="app" style="height:580px">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Skill Kataloğu</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <!-- Profile Header -->
+          <div class="profile-header">
+            <div class="profile-avatar">SK</div>
+            <div>
+              <div class="profile-name">Selin Kaya</div>
+              <div class="profile-meta">Kurum Dışı · TechConsult A.Ş.</div>
+              <div style="margin-top:8px;display:flex;gap:6px">
+                <span class="badge badge-yellow">Python</span>
+                <span class="badge badge-yellow">ML</span>
+                <span class="badge badge-yellow">Veri</span>
+              </div>
+            </div>
+            <div class="profile-score" style="margin-left:auto;text-align:center">
+              <div class="profile-score-val">9.2</div>
+              <div class="profile-score-label">Ort. Puan</div>
+              <div style="color:var(--sidebar-muted);font-size:11px;margin-top:2px">24 eğitim</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-left:16px;align-self:flex-start">Düzenle</button>
+          </div>
+
+          <div class="page-content">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <!-- Bar Chart -->
+              <div class="card card-md">
+                <div class="section-title">Yıllık Eğitim Sayısı</div>
+                <div class="bar-chart">
+                  <div class="bar-wrap"><div class="bar" style="height:40%"></div><div class="bar-label">2022</div></div>
+                  <div class="bar-wrap"><div class="bar" style="height:60%"></div><div class="bar-label">2023</div></div>
+                  <div class="bar-wrap"><div class="bar" style="height:80%"></div><div class="bar-label">2024</div></div>
+                  <div class="bar-wrap"><div class="bar" style="height:100%"></div><div class="bar-label">2025</div></div>
+                  <div class="bar-wrap"><div class="bar" style="height:45%;opacity:0.5"></div><div class="bar-label">2026</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">2025: 8 eğitim (en yüksek)</div>
+              </div>
+
+              <!-- Skills -->
+              <div class="card card-md">
+                <div class="section-title">Skill Puanları</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:500">Python</span><span style="font-weight:700">9.2</span></div>
+                    <div style="height:5px;background:var(--border);border-radius:3px"><div style="width:92%;height:100%;background:var(--primary);border-radius:3px"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:500">Makine Öğrenmesi</span><span style="font-weight:700">8.5</span></div>
+                    <div style="height:5px;background:var(--border);border-radius:3px"><div style="width:85%;height:100%;background:var(--primary);border-radius:3px"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:500">Veri Görselleştirme</span><span style="font-weight:700">7.8</span></div>
+                    <div style="height:5px;background:var(--border);border-radius:3px"><div style="width:78%;height:100%;background:var(--primary);border-radius:3px"></div></div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="font-weight:500">SQL</span><span style="font-weight:700">7.1</span></div>
+                    <div style="height:5px;background:var(--border);border-radius:3px"><div style="width:71%;height:100%;background:var(--primary);border-radius:3px"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Training History -->
+            <div class="card" style="margin-top:16px">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">Eğitim Geçmişi</div>
+              <table>
+                <thead><tr><th>Eğitim</th><th>Tarih</th><th>Puan</th><th>Durum</th></tr></thead>
+                <tbody>
+                  <tr><td>Python Temelleri</td><td>Nis 2026</td><td><span style="font-weight:700">9.5</span></td><td><span class="badge badge-success">Tamamlandı</span></td></tr>
+                  <tr><td>Veri Analizi</td><td>Mar 2026</td><td><span style="font-weight:700">8.8</span></td><td><span class="badge badge-success">Tamamlandı</span></td></tr>
+                  <tr><td>ML Temelleri</td><td>Şub 2026</td><td><span style="font-weight:700">9.0</span></td><td><span class="badge badge-success">Tamamlandı</span></td></tr>
+                  <tr><td>Python İleri</td><td>15 May 2026</td><td>—</td><td><span class="badge badge-blue">Planlandı</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 5: TAMAMLAMA AKIŞI -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction" id="dir-5">
+  <div class="direction-header">
+    <h2>Yön 5 — Eğitim Tamamlama & İptal Akışı</h2>
+    <p>Zorunlu puan girişi + çakışma uyarısı + iptal notu</p>
+  </div>
+  <div class="screen-grid">
+    <!-- SCREEN A: Tamamlama Modal -->
+    <div class="screen-wrap">
+      <div class="screen-label">Eğitim Tamamlama — Puan Girişi</div>
+      <div class="app" style="position:relative">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content" style="position:relative">
+          <div class="topbar"><h2>Dashboard</h2><button class="btn btn-primary">+ Yeni Eğitim</button></div>
+          <!-- Blurred bg -->
+          <div style="filter:blur(2px);padding:20px;opacity:0.4">
+            <div class="stat-grid"><div class="stat-card"><div class="stat-label">Bu Hafta</div><div class="stat-value">4</div></div><div class="stat-card"><div class="stat-label">Tamamlanan</div><div class="stat-value">12</div></div><div class="stat-card"><div class="stat-label">Aktif Eğitmen</div><div class="stat-value">38</div></div><div class="stat-card"><div class="stat-label">Bekleyen</div><div class="stat-value">2</div></div></div>
+          </div>
+          <!-- Modal Overlay -->
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;padding:20px">
+            <div style="background:var(--surface);border-radius:12px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+              <div style="background:var(--sidebar-bg);padding:20px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="color:#fff;font-size:15px;font-weight:600">Eğitimi Tamamla</div>
+                  <div style="color:var(--sidebar-muted);font-size:12px;margin-top:2px">Python Temelleri · 6 Mayıs 2026</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="color:var(--sidebar-muted)">✕</button>
+              </div>
+              <div style="padding:20px">
+                <div style="background:#F0FDF4;border:1px solid var(--success);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#166534">
+                  ✓ Eğitim başarıyla tamamlandı olarak işaretlenecek.
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Selin Kaya — Eğitmen Puanı <span style="color:var(--destructive)">*</span></label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input class="form-control" type="number" min="1" max="10" value="9" style="width:80px;font-size:20px;font-weight:700;text-align:center">
+                    <span style="color:var(--muted)">/10</span>
+                    <div style="flex:1;display:flex;gap:4px">
+                      {1,2,3,4,5,6,7,8,9,10}.map → dots
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:4px;margin-top:8px">
+                    <button class="btn btn-outline btn-sm" style="min-width:32px">1</button><button class="btn btn-outline btn-sm" style="min-width:32px">2</button><button class="btn btn-outline btn-sm" style="min-width:32px">3</button><button class="btn btn-outline btn-sm" style="min-width:32px">4</button><button class="btn btn-outline btn-sm" style="min-width:32px">5</button><button class="btn btn-outline btn-sm" style="min-width:32px">6</button><button class="btn btn-outline btn-sm" style="min-width:32px">7</button><button class="btn btn-outline btn-sm" style="min-width:32px">8</button><button class="btn btn-primary btn-sm" style="min-width:32px">9</button><button class="btn btn-outline btn-sm" style="min-width:32px">10</button>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:6px">Puan girilmeden tamamlama işlemi gerçekleştirilemez.</div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px">
+                  <button class="btn btn-outline" style="flex:1">Vazgeç</button>
+                  <button class="btn btn-primary" style="flex:1">Tamamla ve Kaydet</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN B: İptal Akışı + Çakışma Uyarısı -->
+    <div class="screen-wrap">
+      <div class="screen-label">Çakışma Uyarısı (Soft Warning)</div>
+      <div class="app" style="position:relative">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content" style="position:relative">
+          <div class="topbar"><h2>Yeni Eğitim</h2><button class="btn btn-ghost btn-sm">✕</button></div>
+          <div style="filter:blur(2px);padding:20px;opacity:0.3">
+            <div class="wizard-steps"><div class="wizard-step"><div class="step-num done">✓</div><div class="step-label">Eğitim Bilgisi</div></div><div class="step-line done"></div><div class="wizard-step"><div class="step-num done">✓</div><div class="step-label">Tarih</div></div><div class="step-line done"></div><div class="wizard-step"><div class="step-num active">3</div><div class="step-label active">Eğitmen</div></div><div class="step-line"></div><div class="wizard-step"><div class="step-num">4</div><div class="step-label">Özet</div></div></div>
+          </div>
+          <!-- Çakışma Modal -->
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;padding:20px">
+            <div style="background:var(--surface);border-radius:12px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+              <div style="background:#FEF9C3;border-bottom:1px solid #F59E0B;padding:16px 20px;display:flex;gap:12px;align-items:flex-start">
+                <span style="font-size:20px">⚠️</span>
+                <div>
+                  <div style="font-weight:600;color:#854D0E;font-size:14px">Takvim Çakışması</div>
+                  <div style="color:#92400E;font-size:12px;margin-top:2px">Elif Özdemir · 15 Mayıs 2026</div>
+                </div>
+              </div>
+              <div style="padding:20px">
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+                  Elif Özdemir, <strong>15 Mayıs 2026</strong> tarihinde başka bir eğitime atanmış:
+                </p>
+                <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+                  <div style="font-weight:600">Django Temelleri</div>
+                  <div style="color:var(--muted);margin-top:2px">09:00 – 17:00 · Tüm gün</div>
+                </div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Yine de devam etmek istiyor musunuz?</p>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-outline" style="flex:1">‹ Geri Dön, Başkasını Seç</button>
+                  <button class="btn btn-danger" style="flex:1">Yine de Ata</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DIRECTION 6: SKİLL KATALOĞU -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="direction" id="dir-6">
+  <div class="direction-header">
+    <h2>Yön 6 — Skill Kataloğu</h2>
+    <p>Merkezi skill listesi + ekleme + pasife alma</p>
+  </div>
+  <div class="screen-grid">
+    <div class="screen-wrap" style="grid-column:1/-1">
+      <div class="screen-label">Skill Kataloğu</div>
+      <div class="app" style="height:520px">
+        <aside class="sidebar">
+          <div class="sidebar-logo"><div class="logo-mark">T</div><span>Akademi</span></div>
+          <nav class="sidebar-nav">
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Eğitmenler</div>
+            <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Skill Kataloğu</div>
+            <div class="nav-item"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Eğitimler</div>
+          </nav>
+          <div class="sidebar-footer"><div class="user-pill"><div class="avatar">AY</div><div class="user-info"><div class="user-name">Ayşe Yılmaz</div><div class="user-role">Koordinatör</div></div></div></div>
+        </aside>
+        <div class="content">
+          <div class="topbar">
+            <h2>Skill Kataloğu</h2>
+            <div class="topbar-actions">
+              <div class="search-bar" style="width:200px"><svg class="search-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="m11 11 3 3"/></svg><input type="text" placeholder="Skill ara..."></div>
+              <button class="btn btn-primary">+ Skill Ekle</button>
+            </div>
+          </div>
+          <div class="page-content">
+            <div class="tabs" style="margin-bottom:16px"><div class="tab active">Tümü (42)</div><div class="tab">Aktif (38)</div><div class="tab">Pasif (4)</div></div>
+            <div class="card">
+              <table>
+                <thead><tr><th>Skill Adı</th><th>Kategori</th><th>Eğitmen Sayısı</th><th>Eklenme Tarihi</th><th>Durum</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:600">Python</td><td><span class="badge badge-gray">Programlama</span></td><td>12</td><td>10 Oca 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600">Proje Yönetimi</td><td><span class="badge badge-gray">Yönetim</span></td><td>8</td><td>15 Oca 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600">Makine Öğrenmesi</td><td><span class="badge badge-gray">Yapay Zeka</span></td><td>6</td><td>20 Oca 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600">İletişim Becerileri</td><td><span class="badge badge-gray">Soft Skills</span></td><td>15</td><td>22 Oca 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600;color:var(--muted)">Flash (eski)</td><td><span class="badge badge-gray">Web</span></td><td>0</td><td>5 Şub 2024</td><td><span class="badge badge-gray">Pasif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600">Veri Görselleştirme</td><td><span class="badge badge-gray">Analitik</span></td><td>9</td><td>1 Mar 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                  <tr><td style="font-weight:600">SQL</td><td><span class="badge badge-gray">Veri Tabanı</span></td><td>11</td><td>10 Mar 2025</td><td><span class="badge badge-success">Aktif</span></td><td><button class="btn btn-ghost btn-sm">···</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function show(n, btn) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('visible'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dir-' + n).classList.add('visible');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
